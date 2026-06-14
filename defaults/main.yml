@@ -1,0 +1,23 @@
+---
+# defaults file for vector-role
+vector_version: "0.31.0"
+vector_arch: "amd64"
+vector_config_dir: "/etc/vector"
+vector_data_dir: "/var/lib/vector"
+
+# Vector sink configuration
+vector_clickhouse_sink_enabled: true
+vector_clickhouse_host: "127.0.0.1"
+vector_clickhouse_port: 8123
+vector_clickhouse_database: "logs"
+vector_clickhouse_table: "nginx_logs"
+vector_clickhouse_user: "default"
+vector_clickhouse_password: ""
+
+# Vector source configuration
+vector_sources:
+  nginx_access:
+    type: file
+    include:
+      - /var/log/nginx/access.log
+    read_from: beginning

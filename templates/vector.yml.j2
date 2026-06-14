@@ -1,0 +1,25 @@
+sources:
+{% for source_name, source_config in vector_sources.items() %}
+  {{ source_name }}:
+    type: {{ source_config.type }}
+    include: {{ source_config.include | to_yaml }}
+    read_from: {{ source_config.read_from | default('beginning') }}
+{% endfor %}
+
+{% if vector_clickhouse_sink_enabled %}
+sinks:
+  clickhouse_nginx:
+    type: clickhouse
+    inputs:
+      - nginx_access
+    database: {{ vector_clickhouse_database }}
+    endpoint: http://{{ vector_clickhouse_host }}:{{ vector_clickhouse_port }}
+    table: {{ vector_clickhouse_table }}
+    auth:
+      user: {{ vector_clickhouse_user }}
+      password: {{ vector_clickhouse_password }}
+      strategy: basic
+    batch:
+      max_size: 1000
+      timeout_secs: 5
+{% endif %}
