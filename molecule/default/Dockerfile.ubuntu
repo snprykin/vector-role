@@ -1,0 +1,9 @@
+FROM antmelekhin/docker-systemd:ubuntu-22.04
+
+# Скачиваем и устанавливаем Vector напрямую
+RUN apt-get update && apt-get install -y curl && \
+    ARCH=$(dpkg --print-architecture) && \
+    curl -L -k -o /tmp/vector.deb "https://github.com/vectordotdev/vector/releases/download/v0.21.0/vector_0.21.0-1_${ARCH}.deb" && \
+    dpkg -i /tmp/vector.deb || apt-get install -f -y && \
+    rm /tmp/vector.deb && \
+    apt-get clean

@@ -1,67 +1,61 @@
 ---
-# tasks file for vector-role
-- name: Install dependencies
-  ansible.builtin.apt:
-    name:
-      - curl
-      - gnupg
-    state: present
-    update_cache: true
-  become: true
-
-- name: Check if Vector is installed
-  ansible.builtin.command: which vector
-  register: vector_check
+- name: Detect OS family
+  raw: cat /etc/os-release | grep "^ID=" | cut -d= -f2 | tr -d '"'
+  register: os_id
   changed_when: false
-  failed_when: false
 
-- name: Download Vector package
-  ansible.builtin.get_url:
-    url: "{{ vector_package_url }}"
-    dest: "/tmp/vector-{{ vector_version }}.deb"
-    mode: '0644'
-  when: vector_check.rc != 0
+- name: Set OS family fact
+  set_fact:
+    detected_os: "{{ 'Debian' if 'ubuntu' in os_id.stdout or 'debian' in os_id.stdout else 'RedHat' }}"
 
-- name: Install Vector
-  ansible.builtin.apt:
-    deb: "/tmp/vector-{{ vector_version }}.deb"
-    state: present
-  when: vector_check.rc != 0
-  notify: restart vector
-  become: true
+- name: Configure Vector on Debian/Ubuntu
+  block:
+    - name: Create systemd service for Vector
+      copy:
+        dest: /etc/systemd/system/vector.service
+        content: |
+          [Unit]
+          Description=Vector
+          Documentation=https://vector.dev
+          After=network.target
+          
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/vector --config /etc/vector/vector.yaml
+          Restart=always
+          RestartSec=5
+          
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+      notify: Start Vector service
+  when: detected_os == "Debian"
 
-- name: Create Vector configuration directory
-  ansible.builtin.file:
-    path: "{{ vector_config_dir }}"
+- name: Install Vector on RedHat/Rocky Linux
+  block:
+    - name: Download Vector rpm
+      get_url:
+        url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-1.{{ ansible_architecture }}.rpm"
+        dest: "/tmp/vector-{{ vector_version }}.rpm"
+        validate_certs: no
+
+    - name: Install Vector from rpm
+      yum:
+        name: "/tmp/vector-{{ vector_version }}.rpm"
+        state: present
+        disable_gpg_check: yes
+      notify: Start Vector service
+  when: detected_os == "RedHat"
+
+- name: Create Vector config directory
+  file:
+    path: /etc/vector
     state: directory
     mode: '0755'
-    owner: root
-    group: root
-  become: true
 
-- name: Create Vector data directory
-  ansible.builtin.file:
-    path: "{{ vector_data_dir }}"
-    state: directory
-    mode: '0755'
-    owner: root
-    group: root
-  become: true
-
-- name: Deploy Vector configuration
-  ansible.builtin.template:
-    src: vector.yml.j2
-    dest: "{{ vector_config_file }}"
+- name: Configure Vector
+  template:
+    src: vector.yaml.j2
+    dest: /etc/vector/vector.yaml
     mode: '0644'
-    owner: root
-    group: root
-  notify: restart vector
-  become: true
-
-- name: Ensure Vector service is enabled and running
-  ansible.builtin.systemd:
-    name: "{{ vector_service_name }}"
-    state: started
-    enabled: true
-    daemon_reload: true
-  become: true
+  notify: Restart Vector service

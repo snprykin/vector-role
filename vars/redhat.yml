@@ -1,0 +1,4 @@
+---
+vector_arch: "x86_64"
+vector_config_file: "/etc/vector/vector.yaml"
+vector_service_name: "vector"

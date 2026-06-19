@@ -1,0 +1,19 @@
+---
+# Vector configuration file
+data_dir: {{ vector_config.data_dir | default('/var/lib/vector') }}
+
+sources:
+{% for source_name, source_config in vector_config.sources.items() %}
+  {{ source_name }}:
+{% for key, value in source_config.items() %}
+    {{ key }}: {{ value }}
+{% endfor %}
+{% endfor %}
+
+sinks:
+{% for sink_name, sink_config in vector_config.sinks.items() %}
+  {{ sink_name }}:
+{% for key, value in sink_config.items() %}
+    {{ key }}: {{ value }}
+{% endfor %}
+{% endfor %}

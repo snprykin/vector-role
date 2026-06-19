@@ -1,0 +1,7 @@
+Starting galaxy collection install process
+Process install dependency map
+Starting collection install process
+Downloading https://galaxy.ansible.com/api/v3/plugin/ansible/content/published/collections/artifacts/community-docker-5.2.1.tar.gz to /home/user/.ansible/tmp/ansible-local-1853138jaj385a/tmpkorzt5cz/community-docker-5.2.1-qx3877jm
+Installing 'community.docker:5.2.1' to '/home/user/.ansible/collections/ansible_collections/community/docker'
+community.docker:5.2.1 was installed successfully
+'community.library_inventory_filtering_v1:1.1.5' is already installed, skipping.

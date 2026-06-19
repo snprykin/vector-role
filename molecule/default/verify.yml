@@ -1,0 +1,46 @@
+---
+- name: Verify Vector role
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check Vector installation
+      stat:
+        path: /usr/bin/vector
+      register: vector_binary
+
+    - name: Assert Vector is installed
+      assert:
+        that: vector_binary.stat.exists
+        fail_msg: "Vector is NOT installed"
+        success_msg: "Vector is installed"
+
+    - name: Check config
+      stat:
+        path: /etc/vector/vector.yaml
+      register: vector_config
+
+    - name: Assert config exists
+      assert:
+        that: vector_config.stat.exists
+        fail_msg: "Config missing"
+        success_msg: "Config exists"
+
+    - name: Check Vector process
+      command: pgrep vector
+      register: vector_process
+      changed_when: false
+      failed_when: false
+
+    - name: Assert Vector is running
+      assert:
+        that: vector_process.rc == 0
+        fail_msg: "Vector NOT running"
+        success_msg: "Vector is running (PID: {{ vector_process.stdout }})"
+
+    - name: Display summary
+      debug:
+        msg: |
+          ✅ ALL CHECKS PASSED
+          Host: {{ inventory_hostname }}
+          OS: {{ ansible_distribution }}
+          Vector: INSTALLED & RUNNING
