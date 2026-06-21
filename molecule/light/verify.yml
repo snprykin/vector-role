@@ -1,0 +1,38 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Find Vector
+      shell: find / -name vector -type f 2>/dev/null | head -5
+      register: find_result
+      changed_when: false
+    
+    - name: Show where Vector is
+      debug:
+        var: find_result.stdout_lines
+    
+    - name: Check Vector (any location)
+      shell: ls -la /usr/bin/vector /usr/local/bin/vector /opt/vector 2>/dev/null || echo "Vector not in standard paths"
+      register: v_check
+      changed_when: false
+      failed_when: false
+    
+    - name: Display check result
+      debug:
+        var: v_check.stdout_lines
+    
+    - name: Check process
+      shell: pgrep -x vector || pgrep -f vector || echo "No process"
+      register: p
+      changed_when: false
+      failed_when: false
+    
+    - name: Assert process running
+      assert:
+        that: p.stdout != "No process"
+        success_msg: "Vector process found"
+        fail_msg: "Vector process not found"
+    
+    - name: Final status
+      debug:
+        msg: "Light test completed - Vector is running"

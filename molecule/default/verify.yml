@@ -40,7 +40,7 @@
     - name: Display summary
       debug:
         msg: |
-          ✅ ALL CHECKS PASSED
+          ALL CHECKS PASSED
           Host: {{ inventory_hostname }}
           OS: {{ ansible_distribution }}
           Vector: INSTALLED & RUNNING
